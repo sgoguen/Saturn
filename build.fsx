@@ -4,6 +4,7 @@
 #r "paket: groupref build //"
 #load ".fake/build.fsx/intellisense.fsx"
 
+open Fake
 open Fake.Core
 open Fake.DotNet
 open Fake.Tools
@@ -12,6 +13,8 @@ open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
 open Fake.Api
+open System
+open System.IO
 
 // --------------------------------------------------------------------------------------
 // Information about the project to be used at NuGet and in AssemblyInfo files
@@ -31,6 +34,7 @@ let gitHome = "https://github.com/" + gitOwner
 
 let buildDir  = "./build/"
 let dotnetcliVersion = DotNet.getSDKVersionFromGlobalJson()
+let mutable dotnetExePath = "dotnet"
 
 System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let release = ReleaseNotes.parse (System.IO.File.ReadAllLines "RELEASE_NOTES.md")
@@ -92,7 +96,13 @@ Target.create "AssemblyInfo" (fun _ ->
 Target.create "InstallDotNetCLI" (fun _ ->
     let version = DotNet.CliVersion.Version dotnetcliVersion
     let options = DotNet.Options.Create()
-    DotNet.install (fun opts -> { opts with Version = version }) options |> ignore
+    dotnetExePath <- (DotNet.install (fun opts -> { opts with Version = version }) options).DotNetCliPath
+    let fi = FileInfo dotnetExePath
+    let SEPARATOR = if Environment.isWindows then ";" else ":"
+    Environment.SetEnvironmentVariable(
+        "PATH",
+        fi.Directory.FullName + SEPARATOR + System.Environment.GetEnvironmentVariable "PATH",
+        EnvironmentVariableTarget.Process)
     )
 
 Target.create "Restore" (fun _ ->

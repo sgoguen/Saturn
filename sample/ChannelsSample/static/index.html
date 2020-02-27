@@ -1,0 +1,45 @@
+<html>
+<script>
+    let test = (function () {
+        //  Connect to the non-secure client
+        var exampleSocket = new WebSocket("ws://localhost:8085/channel");
+
+        //  Listen to messages from the server
+        exampleSocket.addEventListener('message', function (event) {
+            console.log('Message from server ', event.data);
+            let logElement = document.getElementById('log');
+            logElement.textContent += 'Message from server ' + event.data + '\n';
+        })
+
+        return {
+            sendTest: function () {
+                let msg = 'Test message from client at ' + (new Date().toString());
+                //  Channel message must be JSON encoded with this case sensitive 
+                //  structure prior to sending.
+                let json = JSON.stringify({ Topic: 'topic', Ref: 1, Payload: msg });
+                exampleSocket.send(json);
+            }
+        }
+    })();
+
+</script>
+
+<body>
+    <h1>Channel Example</h1>
+    <p>Click on this button to send a message to the server via a channel topic.</p>
+    <input type="button" onclick="test.sendTest()" value="Send Message to server"/>
+
+    <h2>Ping All Clients</h2>
+    <p>
+        This is a form that submits a name to the /ping endpoint.
+        This will send a message to all the clients.
+    </p>
+    <form action="/ping" method="GET" target="_blank">
+        <input type="text" name="message" value="Server user"/>
+        <input type="submit" value="Submit to Server"/>
+    </form>
+
+    <pre id="log"></pre>
+</body>
+
+</html>

@@ -10,7 +10,6 @@ open Giraffe.HttpStatusCodeHandlers
 
 
 let browserRouter = router {
-    get "/" (text "Hello world")
     get "/ping" (fun next ctx -> task {
       let hub = ctx.GetService<Saturn.Channels.ISocketHub>()
       match ctx.TryGetQueryStringValue "message" with
@@ -42,6 +41,7 @@ let app = application {
     use_router browserRouter
     url "http://localhost:8085/"
     add_channel "/channel" sampleChannel
+    use_static "static"
 }
 
 [<EntryPoint>]
